@@ -24,8 +24,6 @@ import math
 to control the velocity and acceleration limits on a per-command basis
 to create a continouous trajectory.'''
 
-POS_CMD = 0.5
-
 async def cmd_stream(s, cmd):
 	results = ( await s.command(cmd.encode('utf-8'), allow_any_response=True) ).decode('utf-8')
 	print(results)
@@ -47,23 +45,6 @@ async def main():
 
 	# Clear any faults.
 	await c.set_stop()  
-	#------------
-	# Equal to
-	'''
-		await s.command(
-			b'd stop',
-			allow_any_response=True)
-
-			#Reference
-			#old_kp = float((await s.command(
-			#    b'conf get servo.pid_position.kp',
-			#    allow_any_response=True)).decode('utf8'))
-	'''
-	#------------
-
-	#cmd = f'conf set servo.pid_position.kp {new_kp}'
-	#cmd = f'd  stop'
-	#await s.command(cmd.encode('utf8'))
 
 	'''
 	#----------------
@@ -102,6 +83,7 @@ async def main():
 	#----------------
 	# exact 0 (set current position as 0)
 	cmd = 'd exact 0'
+	results = (await s.command(cmd.encode('utf-8'), allow_any_response=True)).decode('utf-8')
 	await cmd_stream(s, cmd)
 
 	#----------------
@@ -140,24 +122,62 @@ async def main():
 
 	#----------------
 	# ex. of set parameters
-	position_max = 1; cmd = f'conf set servopos.position_max {position_max}'
+	position_max = 1000; cmd = f'conf set servopos.position_max {position_max}'
 	await cmd_stream(s, cmd)
 
 	position_min = -position_max; cmd = f'conf set servopos.position_min {position_min}'
 	await cmd_stream(s, cmd)
 
+	#----------------
+	# ex. of velocity control
+	#position = math.nan; velocity = 1; max_torque = 1
+	#cmd = f'd pos {position} {velocity} {max_torque}'
+	#results = (await s.command(cmd.encode('utf-8'), allow_any_response=True)).decode('utf-8')
+	#print(results)
 
-	cmd = f'd pos 0.5 0.0 1.0'
-	await cmd_stream(s, cmd)
+
 	#state = await c.set_position(position=math.nan, query=True)
 	# Print out everything.
 	#print(state)
 	
 
-		
-	cmd = 1
+	velmax = 5
+	velmin = -velmax
 
+	# Setting initial velocity values
+	vel1 = 0.0001
+	vel2 = 0.0001
 	
+	await c.set_stop()
+
+	'''
+	state = await c.set_position(position=math.nan, velocity=5, query=True)
+	print(state)
+	while True:
+		await asyncio.sleep(1)
+	'''
+
+
+
+	while True:
+
+		while vel1 <= velmax:
+			await asyncio.sleep(0.05)
+			vel1 += 0.1
+			state = await c.set_position(position=math.nan, velocity=vel1, query=True)
+			print(state)
+
+		while vel1 >= velmin:
+			await asyncio.sleep(0.05)
+			vel1 -= 0.1
+			state = await c.set_position(position=math.nan, velocity=vel1, query=True)
+			print(state)
+
+		
+
+	'''
+	cmd = 0.5
+
 	results = await c.set_position(
 		position=cmd,
 		velocity=0.0,
@@ -170,16 +190,9 @@ async def main():
 
 	print(results)
 
-	print("\n Position before control:", results.values[moteus.Register.POSITION], "\n")
+	print("Position:", results.values[moteus.Register.POSITION], "\n")
 	await asyncio.sleep(0.02)
-
-
-	while True:
-		# Print out everything.
-		#state = await c.set_position(position=math.nan, query=True)
-		#print(f'{state}\n\n')
-		await asyncio.sleep(1)
-	
+	'''
 
 
 

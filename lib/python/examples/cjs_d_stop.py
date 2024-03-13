@@ -26,11 +26,6 @@ to create a continouous trajectory.'''
 
 POS_CMD = 0.5
 
-async def cmd_stream(s, cmd):
-	results = ( await s.command(cmd.encode('utf-8'), allow_any_response=True) ).decode('utf-8')
-	print(results)
-
-
 async def main():
 	qr = moteus.QueryResolution()
 	qr._extra = {
@@ -93,16 +88,21 @@ async def main():
 		a - acceleration limit: the given value will override the global acceleration limit for the duration of this command.
 		o - fixed voltage override: while in affect, treat the control as if fixed_voltage_mode were enabled with the given voltage
 	'''
+	state = await c.set_position(position=math.nan, query=True)
+	# Print out everything.
+	print(state)
 
 	#----------------
 	# ex. of stop
 	cmd = 'd stop'
-	await cmd_stream(s, cmd)
+	results = (await s.command(cmd.encode('utf-8'), allow_any_response=True)).decode('utf-8')
+	print(results)
 
 	#----------------
 	# exact 0 (set current position as 0)
-	cmd = 'd exact 0'
-	await cmd_stream(s, cmd)
+	#cmd = 'd exact 0'
+	#results = (await s.command(cmd.encode('utf-8'), allow_any_response=True)).decode('utf-8')
+	#print(results)
 
 	#----------------
 	# ex. of position control
@@ -110,21 +110,6 @@ async def main():
 	#cmd = f'd pos {position} {velocity} {max_torque}'
 	#results = (await s.command(cmd.encode('utf-8'), allow_any_response=True)).decode('utf-8')
 	#print(results)
-
-	#----------------
-	# ex. of velocity control
-	#position = math.nan; velocity = 1; max_torque = 1
-	#cmd = f'd pos {position} {velocity} {max_torque}'
-	#results = (await s.command(cmd.encode('utf-8'), allow_any_response=True)).decode('utf-8')
-	#print(results)
-
-	#-----------------
-	# ex. of velocity control using set_position
-	#	This is different from 'd pos' command in that motor has been stopped when Ctrl-C
-	#state = await c.set_position(position=math.nan, velocity=5, query=True)
-	#print(state)
-	#
-
 
 	#----------------
 	# ex. of get parameters
@@ -135,29 +120,16 @@ async def main():
 	#----------------
 	# ex. of set parameters
 	#new_kp = 4.0; cmd = f'conf set servo.pid_position.kp {new_kp}'
-	#results = (await s.command(cmd.encode('utf-8'), allow_any_response=True)).decode('utf-8')
+	#results = (await s.command(cmd, allow_any_response=True)).decode('utf-8')
 	#print(results)
 
-	#----------------
-	# ex. of set parameters
-	position_max = 1; cmd = f'conf set servopos.position_max {position_max}'
-	await cmd_stream(s, cmd)
-
-	position_min = -position_max; cmd = f'conf set servopos.position_min {position_min}'
-	await cmd_stream(s, cmd)
 
 
-	cmd = f'd pos 0.5 0.0 1.0'
-	await cmd_stream(s, cmd)
-	#state = await c.set_position(position=math.nan, query=True)
-	# Print out everything.
-	#print(state)
 	
 
-		
-	cmd = 1
+	'''
+	cmd = 0.5
 
-	
 	results = await c.set_position(
 		position=cmd,
 		velocity=0.0,
@@ -170,16 +142,9 @@ async def main():
 
 	print(results)
 
-	print("\n Position before control:", results.values[moteus.Register.POSITION], "\n")
+	print("Position:", results.values[moteus.Register.POSITION], "\n")
 	await asyncio.sleep(0.02)
-
-
-	while True:
-		# Print out everything.
-		#state = await c.set_position(position=math.nan, query=True)
-		#print(f'{state}\n\n')
-		await asyncio.sleep(1)
-	
+	'''
 
 
 
