@@ -179,7 +179,7 @@ async def main():
 
 	#------------------------------------
 	# Read Data
-	name = '1>motor_position'
+	name = 'motor_position'
 		# Possible 'name's can be acquired by 'tel list' command
 	
 		#>>> tel list
