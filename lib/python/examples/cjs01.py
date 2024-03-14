@@ -29,7 +29,24 @@ POS_CMD = 0.5
 async def cmd_stream(s, cmd):
 	results = ( await s.command(cmd.encode('utf-8'), allow_any_response=True) ).decode('utf-8')
 	print(results)
+	#await asyncio.sleep(0.02)
 
+async def stop(s):
+	cmd = 'd stop'
+	await cmd_stream(s, cmd)
+
+async def stop_n_hold(s):
+	cmd = 'd stop'
+	await cmd_stream(s, cmd)
+	cmd = f'd pos nan 0.0 1.0'
+	await cmd_stream(s, cmd)
+
+	# equivalent to
+	#cmd = 'd zero'
+
+async def pos_control(s, pos, vel=0, max_torque="nan"):
+	cmd = f'd pos {pos} {vel} {max_torque}'
+	await cmd_stream(s, cmd)
 
 async def main():
 	qr = moteus.QueryResolution()
@@ -99,6 +116,9 @@ async def main():
 	cmd = 'd stop'
 	await cmd_stream(s, cmd)
 
+	# equivalent to
+	#		stop(s)
+
 	#----------------
 	# exact 0 (set current position as 0)
 	cmd = 'd exact 0'
@@ -147,17 +167,46 @@ async def main():
 	await cmd_stream(s, cmd)
 
 
-	cmd = f'd pos 0.5 0.0 1.0'
-	await cmd_stream(s, cmd)
+	pos = 0.5; await pos_control(s, pos)
+	#await pos_control(s, pos, vel, max_torque) #default: vel=0, max_torque = "nan" (system-wide configured maximum torque)
+
+
 	#state = await c.set_position(position=math.nan, query=True)
 	# Print out everything.
 	#print(state)
 	
+	print("Just after cmd 'd pos'")
 
-		
+	#------------------------------------
+	# Read Data
+	name = '1>motor_position'
+		# Possible 'name's can be acquired by 'tel list' command
+	
+		#>>> tel list
+		#	system_info
+		#	firmware
+		#	aux1
+		#	ic_pz1
+		#	aux2
+		#	ic_pz2
+		#	motor_position
+		#	drv8323
+		#	servo_stats
+		#	servo_cmd
+		#	servo_control
+		#	board_debug
+		#	git
+	results = await s.read_data(name)
+	print(results)
+	#print(results.position)
+	#------------------------------------
+
+	while True:
+		await asyncio.sleep(1)
+
+
 	cmd = 1
 
-	
 	results = await c.set_position(
 		position=cmd,
 		velocity=0.0,
@@ -171,8 +220,9 @@ async def main():
 	print(results)
 
 	print("\n Position before control:", results.values[moteus.Register.POSITION], "\n")
-	await asyncio.sleep(0.02)
+	await asyncio.sleep(1)
 
+	#await stop_n_hold(s)
 
 	while True:
 		# Print out everything.
